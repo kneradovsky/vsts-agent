@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.Services.Agent.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -346,7 +347,20 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
                 _gitEnv["GIT_HTTP_USER_AGENT"] = _gitHttpUserAgentEnv;
             }
 
-            return await processInvoker.ExecuteAsync(repoRoot, _gitPath, arg, _gitEnv, cancellationToken);
+#if OS_WINDOWS
+            Encoding encoding = Encoding.UTF8;
+#else
+            Encoding encoding = null;
+#endif
+
+            return await processInvoker.ExecuteAsync(
+                workingDirectory: repoRoot,
+                fileName: _gitPath,
+                arguments: arg,
+                environment: _gitEnv,
+                requireExitCodeZero: false,
+                outputEncoding: encoding,
+                cancellationToken: cancellationToken);
         }
 
         private async Task<int> ExecuteGitCommandAsync(IExecutionContext context, string repoRoot, string command, string options, IList<string> output)
